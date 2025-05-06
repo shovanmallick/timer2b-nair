@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Elegant Timer</title>
+  <style>
+    :root {
+      --bg-color: #001f3f;
+      --text-color: #FFD700;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text-color);
+      text-transform: uppercase;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 500px;
+    }
+
+    .glow {
+      text-shadow: 0 0 8px var(--text-color), 0 0 16px var(--text-color);
+    }
+
+    .circle-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 30px;
+    }
+
+    svg {
+      transform: rotate(-90deg);
+    }
+
+    circle {
+      fill: none;
+      stroke-width: 12;
+      stroke-linecap: round;
+    }
+
+    .bg {
+      stroke: rgba(255, 215, 0, 0.2);
+    }
+
+    .progress {
+      stroke: var(--text-color);
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .percentage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .value {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 600px) {
+      .circle-container {
+        width: 150px;
+        height: 150px;
+      }
+
+      .percentage {
+        font-size: 1rem;
+      }
+
+      .value {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container glow">
+    <div class="circle-container">
+      <svg width="200" height="200">
+        <circle class="bg" cx="100" cy="100" r="90" />
+        <circle class="progress" cx="100" cy="100" r="90" stroke-dasharray="565.48" stroke-dashoffset="565.48" />
+      </svg>
+      <div class="percentage" id="elapsedText">0%</div>
+    </div>
+    <div class="value" id="elapsedPercent"></div>
+    <div class="value" id="remainingPercent"></div>
+    <div class="value" id="totalDaysRemaining"></div>
+    <div class="value" id="timeRemaining"></div>
+  </div>
+
+  <script>
+    const startDate = new Date("1991-10-28T00:00:00Z");
+    const endDate = new Date("2031-10-28T00:00:00Z");
+    const progressCircle = document.querySelector(".progress");
+    const radius = 90;
+    const circumference = 2 * Math.PI * radius;
+
+    progressCircle.style.strokeDasharray = circumference;
+
+    function setProgress(percent) {
+      const offset = circumference - (percent / 100) * circumference;
+      progressCircle.style.strokeDashoffset = offset;
+    }
+
+    function updateTimer() {
+      const now = new Date();
+      const totalDuration = endDate - startDate;
+      const elapsed = now - startDate;
+      const remaining = endDate - now;
+
+      const clampedElapsed = Math.min(Math.max(elapsed, 0), totalDuration);
+      const clampedRemaining = Math.max(endDate - now, 0);
+
+      const elapsedPercent = (clampedElapsed / totalDuration * 100).toFixed(6);
+      const remainingPercent = (100 - elapsedPercent).toFixed(6);
+      const totalDays = Math.floor(clampedRemaining / (1000 * 60 * 60 * 24));
+
+      // Time breakdown
+      let years = endDate.getUTCFullYear() - now.getUTCFullYear();
+      let months = endDate.getUTCMonth() - now.getUTCMonth();
+      let days = endDate.getUTCDate() - now.getUTCDate();
+      let hours = 23 - now.getUTCHours();
+      let minutes = 59 - now.getUTCMinutes();
+      let seconds = 59 - now.getUTCSeconds();
+      let centiseconds = 100 - Math.floor(now.getUTCMilliseconds() / 10);
+
+      if (centiseconds === 100) {
+        centiseconds = 0;
+        seconds += 1;
+      }
+
+      if (seconds >= 60) {
+        seconds = 0;
+        minutes += 1;
+      }
+
+      if (minutes >= 60) {
+        minutes = 0;
+        hours += 1;
+      }
+
+      if (days < 0) {
+        months -= 1;
+        const lastMonth = new Date(now.getUTCFullYear(), now.getUTCMonth(), 0);
+        days += lastMonth.getDate();
+      }
+
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+
+      document.getElementById("elapsedText").textContent = `${parseFloat(elapsedPercent).toFixed(1)}%`;
+      setProgress(parseFloat(elapsedPercent));
+
+      document.getElementById("elapsedPercent").textContent =
+        `Elapsed Time: ${elapsedPercent}%`;
+      document.getElementById("remainingPercent").textContent =
+        `Remaining Time: ${remainingPercent}%`;
+      document.getElementById("totalDaysRemaining").textContent =
+        `Days Remaining: ${totalDays}`;
+      document.getElementById("timeRemaining").textContent =
+        `Remaining: ${years}Y ${months}M ${days}D ${hours}H ${minutes}M ${seconds}S ${centiseconds}CS`;
+    }
+
+    setInterval(updateTimer, 100);
+    updateTimer();
+  </script>
+</body>
+</html>
